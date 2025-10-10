@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Responsive Photo Carousel</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+      color:#e6eef8; display:flex; align-items:center; justify-content:center;
+      min-height:100vh; padding:24px;
+    }
+
+    .carousel-wrap{
+      width:100%; max-width:960px;
+      background:linear-gradient(180deg,#0f172a,#1e293b);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,.6);
+      transition:transform .3s;
+    }
+    .carousel-wrap:hover{transform:scale(1.01)}
+
+    .carousel{position:relative;overflow:hidden;border-radius:12px}
+    .slides{display:flex;transition:transform .6s cubic-bezier(.22,.9,.24,1)}
+    .slide{min-width:100%;display:flex;align-items:center;justify-content:center;position:relative}
+    .slide img{
+      width:100%;height:60vh;object-fit:cover;border-radius:12px;
+      transition:transform .8s ease-in-out, opacity .8s ease-in-out;
+    }
+    .slide img:hover{transform:scale(1.03)}
+
+    .meta{
+      position:absolute;left:16px;bottom:18px;
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(5px);
+      padding:10px 16px;
+      border-radius:8px;
+      font-size:14px;
+      animation:fadeInUp .7s ease-in-out;
+    }
+    .meta div:first-child{font-weight:700;font-size:15px;color:#fff}
+    .caption{font-size:13px;color:#cbd5e1}
+
+    @keyframes fadeInUp{
+      from{opacity:0; transform:translateY(10px);}
+      to{opacity:1; transform:translateY(0);}
+    }
+
+    .controls{position:absolute;top:50%;left:12px;transform:translateY(-50%);display:flex;gap:8px}
+    .controls .btn{
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.1);
+      color:#fff; padding:10px 14px;
+      border-radius:8px; cursor:pointer;
+      font-size:18px; transition:all .25s;
+    }
+    .controls .btn:hover{
+      background:#60a5fa;
+      box-shadow:0 0 10px #60a5fa80;
+      transform:scale(1.08);
+    }
+
+    .right-controls{
+      position:absolute;top:12px;right:12px;display:flex;gap:8px
+    }
+    .toolbar{display:flex;gap:8px;align-items:center}
+    .toggle{
+      padding:8px 12px;border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      cursor:pointer;
+      transition:all .3s;
+    }
+    .toggle:hover{background:#1d4ed8;color:#fff}
+
+    .indicators{
+      display:flex;gap:8px;justify-content:center;padding:12px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:rgba(255,255,255,.2);cursor:pointer;
+      transition:all .3s;
+    }
+    .dot.active{background:#60a5fa;transform:scale(1.2)}
+
+    .thumbs{
+      display:flex;gap:8px;overflow-x:auto;padding:10px;margin-top:12px
+    }
+    .thumb{
+      flex:0 0 100px;height:64px;border-radius:8px;overflow:hidden;
+      cursor:pointer;opacity:.7;border:2px solid transparent;
+      transition:all .3s;
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+    .thumb:hover img{transform:scale(1.1)}
+    .thumb.active{opacity:1;border-color:#60a5fa;box-shadow:0 0 10px #60a5fa66}
+
+    @media (max-width:640px){
+      .slide img{height:45vh}
+      .thumb{flex:0 0 80px;height:52px}
+      .meta{font-size:12px}
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+  const {useState, useEffect, useRef} = React;
+
+  function Slide({src, title, index, active}){
+    return (
+      <div className="slide" aria-hidden={!active} data-index={index}>
+        <img src={src} alt={title} draggable="false" />
+        <div className="meta">
+          <div>{title}</div>
+          <div className="caption">Photo {index + 1}</div>
+        </div>
+      </div>
+    );
+  }
+
+  function Thumbnails({slides, activeIndex, onPick}){
+    return (
+      <div className="thumbs" role="tablist" aria-label="Thumbnails">
+        {slides.map((s,i)=> (
+          <div key={s.src} className={`thumb ${i===activeIndex? 'active':''}`} onClick={()=>onPick(i)} role="tab" aria-selected={i===activeIndex}>
+            <img src={s.src} alt={s.title} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  class Controls extends React.PureComponent{
+    render(){
+      const {onPrev,onNext,onToggleAuto,isAuto, speed, onSpeedChange} = this.props;
+      return (
+        <div className="right-controls">
+          <div className="toolbar">
+            <button className="toggle" onClick={onToggleAuto} aria-pressed={isAuto}>{isAuto? 'Autoplay: ON':'Autoplay: OFF'}</button>
+            <select className="toggle" value={speed} onChange={(e)=>onSpeedChange(Number(e.target.value))} title="Autoplay interval in ms">
+              <option value={3000}>3s</option>
+              <option value={4000}>4s</option>
+              <option value={5000}>5s</option>
+            </select>
+          </div>
+          <div className="controls">
+            <button className="btn" onClick={onPrev} aria-label="Previous">◀</button>
+            <button className="btn" onClick={onNext} aria-label="Next">▶</button>
+          </div>
+        </div>
+      )
+    }
+  }
+
+  class PhotoCarousel extends React.Component{
+    constructor(props){
+      super(props);
+      this.state = {current:0,auto:true,intervalMs:4000,isHovering:false};
+      this.slidesRef = React.createRef();
+      this.touchStartX = 0; this.touchEndX = 0; this.timer = null;
+      this.handleKey = this.handleKey.bind(this);
+    }
+
+    componentDidMount(){
+      window.addEventListener('keydown', this.handleKey);
+      this.setupTimer();
+    }
+    componentWillUnmount(){
+      window.removeEventListener('keydown', this.handleKey);
+      this.clearTimer();
+    }
+
+    componentDidUpdate(prevProps, prevState){
+      if(prevState.auto !== this.state.auto || prevState.intervalMs !== this.state.intervalMs || prevState.current !== this.state.current){
+        this.setupTimer();
+      }
+    }
+
+    setupTimer(){
+      this.clearTimer();
+      if(this.state.auto && !this.state.isHovering){
+        this.timer = setInterval(()=>this.next(), this.state.intervalMs);
+      }
+    }
+    clearTimer(){
+      if(this.timer) clearInterval(this.timer);
+      this.timer = null;
+    }
+
+    handleKey(e){
+      if(e.key === 'ArrowLeft') this.prev();
+      if(e.key === 'ArrowRight') this.next();
+    }
+
+    prev(){
+      this.setState(({current})=>({current: (current -1 + this.props.slides.length) % this.props.slides.length}));
+    }
+    next(){
+      this.setState(({current})=>({current: (current +1) % this.props.slides.length}));
+    }
+
+    pick(index){ this.setState({current:index}); }
+    toggleAuto = ()=>{ this.setState(({auto})=>({auto:!auto})); }
+    setSpeed = (ms)=>{ this.setState({intervalMs:ms}); }
+
+    onMouseEnter = ()=>{ this.setState({isHovering:true}); this.clearTimer(); }
+    onMouseLeave = ()=>{ this.setState({isHovering:false}); this.setupTimer(); }
+
+    onTouchStart = (e)=>{ this.touchStartX = e.touches[0].clientX; }
+    onTouchEnd = (e)=>{ this.touchEndX = e.changedTouches[0].clientX; this.handleSwipe(); }
+    handleSwipe(){
+      const delta = this.touchEndX - this.touchStartX;
+      if(Math.abs(delta) < 40) return;
+      if(delta > 0) this.prev(); else this.next();
+    }
+
+    render(){
+      const {current, auto, intervalMs} = this.state;
+      const {slides} = this.props;
+      const translateX = `translateX(-${current * 100}%)`;
+      return (
+        <div className="carousel-wrap">
+          <div className="carousel" onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}
+            onTouchStart={this.onTouchStart} onTouchEnd={this.onTouchEnd}>
+            <div className="slides" ref={this.slidesRef} style={{transform:translateX}}>
+              {slides.map((s,i)=> (
+                <Slide key={s.src} src={s.src} title={s.title} index={i} active={i===current} />
+              ))}
+            </div>
+            <Controls onPrev={()=>this.prev()} onNext={()=>this.next()} onToggleAuto={this.toggleAuto} isAuto={auto} speed={intervalMs} onSpeedChange={this.setSpeed} />
+            <div style={{position:'absolute',left:0,right:0,bottom:0}}>
+              <div className="indicators" role="tablist" aria-label="Slide indicators">
+                {slides.map((_,i)=> (
+                  <div key={i} className={`dot ${i===current? 'active':''}`} onClick={()=>this.pick(i)} aria-label={`Go to slide ${i+1}`} />
+                ))}
+              </div>
+            </div>
+          </div>
+          <Thumbnails slides={slides} activeIndex={current} onPick={(i)=>this.pick(i)} />
+        </div>
+      )
+    }
+  }
+
+  const sampleSlides = [
+    {src:'https://picsum.photos/id/1015/1200/800', title:'Mountain Lake'},
+    {src:'https://picsum.photos/id/1016/1200/800', title:'Foggy Forest'},
+    {src:'https://picsum.photos/id/1025/1200/800', title:'Snowy Peaks'},
+    {src:'https://picsum.photos/id/1035/1200/800', title:'Desert Dunes'},
+    {src:'https://picsum.photos/id/1043/1200/800', title:'Coastal Cliffs'}
+  ];
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <PhotoCarousel slides={sampleSlides} />
+    </React.StrictMode>
+  );
+  </script>
+</body>
+</html>

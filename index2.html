@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DOM & jQuery Manipulation Demo</title>
+<style>
+  /* Google Fonts for better typography */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
+    color: #222;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  }
+
+  #header {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: #4a5568;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .textClass {
+    color: #2563eb;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+  .textClass:hover {
+    color: #1e40af;
+  }
+
+  #imageContainer img {
+    width: 100%;
+    max-width: 280px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(38, 132, 255, 0.3);
+    margin: 20px auto;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+  #imageContainer img:hover {
+    transform: scale(1.05);
+  }
+
+  button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    margin: 8px 8px 20px 0;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    user-select: none;
+  }
+  button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+
+  #parentDiv {
+    border: 2px dashed #93c5fd;
+    padding: 15px 20px;
+    border-radius: 10px;
+    min-height: 60px;
+    font-style: italic;
+    color: #2563eb;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  hr {
+    margin: 30px 0;
+    border-color: #cbd5e1;
+  }
+
+  h2 {
+    color: #334155;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  form {
+    max-width: 100%;
+  }
+  form input {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1.8px solid #e2e8f0;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s ease;
+  }
+  form input:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 8px #3b82f6aa;
+  }
+  form button {
+    width: 100%;
+    padding: 14px 0;
+    background-color: #2563eb;
+    font-weight: 700;
+    font-size: 1.15rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
+  }
+  form button:hover {
+    background-color: #1e40af;
+    box-shadow: 0 12px 30px rgba(30, 64, 175, 0.7);
+  }
+
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <h1 id="header">Welcome to DOM & jQuery Demo</h1>
+
+  <p class="textClass">This is the first paragraph with class "textClass".</p>
+  <p class="textClass">This is the second paragraph with class "textClass".</p>
+  <p>This is a paragraph without any class.</p>
+
+  <div id="imageContainer">
+    <img id="demoImage" src="https://via.placeholder.com/280" alt="Demo Image" />
+  </div>
+
+  <div style="text-align:center;">
+    <button id="btnChangeText">Change Header Text (getElementById)</button>
+    <button id="btnChangeColor">Change All Paragraph Color (getElementsByTagName)</button>
+    <button id="btnMoveElements">Move Class Elements (getElementsByClassName)</button>
+    <button id="btnChangeImage">Change Image Source</button>
+    <button id="btnAddTextNode">Add Text Node</button>
+    <button id="btnDeleteNode">Delete Text Node</button>
+  </div>
+
+  <div id="parentDiv">Parent Div (text nodes will be added/removed here)</div>
+
+  <hr>
+
+  <h2>Sample Form for jQuery Demo</h2>
+  <form id="demoForm">
+    <input type="text" name="fname" placeholder="First Name" />
+    <input type="text" name="lname" placeholder="Last Name" />
+    <input type="email" name="email" placeholder="Email" />
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>
+
+</div>
+
+<script>
+// Vanilla JS DOM Manipulation
+
+document.getElementById('btnChangeText').addEventListener('click', () => {
+  document.getElementById('header').innerHTML = 'Header Text Changed by getElementById!';
+});
+
+document.getElementById('btnChangeColor').addEventListener('click', () => {
+  const paras = document.getElementsByTagName('p');
+  for (let p of paras) {
+    p.style.color = '#dc2626'; // crimson red
+  }
+});
+
+document.getElementById('btnMoveElements').addEventListener('click', () => {
+  const elems = document.getElementsByClassName('textClass');
+  for (let el of elems) {
+    el.style.position = 'relative';
+    el.style.left = '30px';
+  }
+});
+
+document.getElementById('btnChangeImage').addEventListener('click', () => {
+  document.getElementById('demoImage').src = 'https://via.placeholder.com/280/ef4444/ffffff?text=New+Image';
+});
+
+document.getElementById('btnAddTextNode').addEventListener('click', () => {
+  const parent = document.getElementById('parentDiv');
+  const newText = document.createTextNode('This is a new text node added. ');
+  parent.appendChild(newText);
+});
+
+document.getElementById('btnDeleteNode').addEventListener('click', () => {
+  const parent = document.getElementById('parentDiv');
+  if (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  } else {
+    alert('No child node to delete.');
+  }
+});
+
+// jQuery operations
+
+$(document).ready(function () {
+
+  $('#btnChangeText').click(function () {
+    $(this).text('Button Text Changed by jQuery');
+  });
+
+  $('#btnChangeColor').click(function () {
+    $('body').css({
+      'background-image': 'url(https://via.placeholder.com/1200x600/93c5fd/1e40af?text=Background)',
+      'background-repeat': 'no-repeat',
+      'background-size': 'cover'
+    });
+  });
+
+  $('#demoForm').submit(function (event) {
+    event.preventDefault();
+    let formData = $(this).serializeArray();
+    let message = 'Form Data:\n';
+    formData.forEach(function (field) {
+      message += field.name + ': ' + field.value + '\n';
+    });
+    alert(message);
+  });
+
+  $('input[type="email"]').attr('placeholder', 'Enter your email here');
+
+});
+</script>
+
+</body>
+</html>
